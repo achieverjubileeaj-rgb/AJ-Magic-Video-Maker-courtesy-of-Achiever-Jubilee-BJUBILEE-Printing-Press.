@@ -1,0 +1,53 @@
+name: Tidy uploaded files
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use the newest uploads
+        id: t
+        run: |
+          python3 - <<'PY'
+          import glob, os, subprocess
+          def when(f):
+              out = subprocess.check_output(["git", "log", "-1", "--format=%ct", "--", f]).strip()
+              return int(out or 0)
+          groups = [("index.html", "index*.html"), ("make_android.py", "make_android*.py"),
+                    ("tutorial-1-make-a-video.mp4", "tutorial-1*.mp4"), ("tutorial-2-flipbook-album.mp4", "tutorial-2*.mp4")]
+          changed = False
+          for final, pattern in groups:
+              files = glob.glob(pattern)
+              if not files:
+                  continue
+              newest = max(files, key=lambda f: (when(f), os.path.getsize(f)))
+              for f in files:
+                  if f != newest:
+                      subprocess.run(["git", "rm", "-q", f], check=True); changed = True
+              if newest != final:
+                  subprocess.run(["git", "mv", "-f", newest, final], check=True); changed = True
+              print(final, "<-", newest)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write("changed=%s\n" % ("true" if changed else "false"))
+          PY
+      - name: Save and rebuild the apps
+        if: steps.t.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "AJ Magic Video bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Use the newest uploaded files"
+          git push
+          gh workflow run build-apk.yml --ref "${GITHUB_REF_NAME}"
+          gh workflow run build-windows.yml --ref "${GITHUB_REF_NAME}"
