@@ -1,0 +1,40 @@
+name: Build AJ Magic Video for Windows
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Make the app files
+        run: python make_android.py
+      - name: Build the Windows setup
+        working-directory: desktop
+        run: |
+          npm install --no-audit --no-fund
+          npx electron-builder --win nsis --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AJ-Magic-Video-Maker-Windows-Setup
+          path: desktop/dist/*.exe
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-v1.0.${{ github.run_number }}
+          name: AJ Magic Video for Windows 1.0.${{ github.run_number }}
+          body: |
+            Windows setup for AJ Magic Video Maker.
+            Courtesy of Achiever Jubilee & BJUBILEE Printing Press · +234 706 793 7199 · www.bjubileepress.com.ng
+            Download the Setup .exe below, open it and follow the steps. If Windows shows "Windows protected your PC", click More info, then Run anyway.
+          files: desktop/dist/*.exe
