@@ -80,7 +80,8 @@ def build_www():
 
     cache = ROOT / ".npm-cache"
     cache.mkdir(exist_ok=True)
-    subprocess.run(["npm", "install", "--no-save", "--no-audit", "--no-fund", "--prefix", str(cache)] + NPM, check=True)
+    npm = shutil.which("npm") or "npm"
+    subprocess.run([npm, "install", "--no-save", "--no-audit", "--no-fund", "--prefix", str(cache)] + NPM, check=True, shell=(os.name == "nt"))
     nm = cache / "node_modules"
     css = []
     for pkg, fam, weights in FONTS:
@@ -576,4 +577,4 @@ if __name__ == "__main__":
     build_android()
     build_www()
     build_desktop()
-    print("Android project ready in", OUT, "· Windows project ready in", DESK, "· version 1.0.%d" % RUN)
+    print("Android project ready in", OUT, "- Windows project ready in", DESK, "- version 1.0.%d" % RUN)
