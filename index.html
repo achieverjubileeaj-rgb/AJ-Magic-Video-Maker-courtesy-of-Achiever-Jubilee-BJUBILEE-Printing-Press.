@@ -1055,7 +1055,7 @@ const MK_PLATS=[['9:16','TikTok · Reels · Status','Tall 9:16'],['16:9','Facebo
 const MK_DURS=[1,2,3,4,5,6,8,10,12,15,20,30,45,60];
 const MK_TEXTFX=[['','Template style'],['words','Word by word'],['rise','Rise up'],['slideL','Slide in from left'],['slideR','Slide in from right'],['pop','Pop & bounce'],['slam','Slam'],['zoom','Zoom in'],['type','Typewriter'],['cinema','Cinematic fade']];
 const MK_GROUPS=['Flipbook Albums','Kids & Cartoon','Birthdays & Events','Movies','Animation','Christmas & New Year','Faith','Business','Inspiration'];
-const MK={tpl:'luxe',aspect:'9:16',trans:'fade',brand:'',scenes:[],logo:null,logoName:'',track:'jingle',trackAuto:true,musicBuf:null,musicName:'',musicVol:.8,voiceBuf:null,voiceName:'',voiceVol:1,voiceDelay:.5,t:0,edited:false,credit:true,effect:'none',effectAuto:true,transAuto:true,title3d:'',musicText:''};
+const MK={tpl:'luxe',aspect:'9:16',trans:'fade',brand:'',scenes:[],logo:null,logoName:'',track:'jingle',trackAuto:true,musicBuf:null,musicName:'',musicVol:.8,voiceBuf:null,voiceName:'',voiceVol:1,voiceDelay:.5,t:0,edited:false,credit:true,effect:'none',effectAuto:true,transAuto:true,title3d:'',musicText:'',font:'',tsize:1,ssize:1,tcolor:'',tpos:''};
 function mkLoadSamples(key){
   const T=MK_TPL[key]; MK.brand=T.brand;
   MK.scenes=T.scenes.map((s,i)=>{ const o=MK.scenes[i]||{}, own=o.img&&!o.lib, lib=!own&&s[3]?mkLib(s[3]):null;
@@ -1579,7 +1579,9 @@ function mkBg(ctx,W,H,T,gt,si){
   ctx.restore();
   ctx.globalAlpha=a0;
 }
-function mkTitleFont(T,ts){ return T.font==='fun'?`700 ${ts}px "Fredoka", "Arial Rounded MT Bold", Arial, sans-serif`:T.font==='script'?`400 ${ts*1.35}px "Great Vibes", "Brush Script MT", cursive`:T.font==='serif'?`700 ${ts}px "Playfair Display", Georgia, serif`:`800 ${ts}px "Bricolage Grotesque", "Arial Black", Arial, sans-serif`; }
+const MK_FONTS=[['','Template font'],['sans','Bold modern'],['clean','Clean & simple'],['serif','Elegant serif'],['script','Handwritten script'],['fun','Round & playful'],['mono','Typewriter'],['classic','Classic book'],['impact','Heavy poster']];
+const MK_SIZES=[['','Same as video'],['.7','Small (70%)'],['.85','Smaller (85%)'],['1','Normal'],['1.15','Bigger (115%)'],['1.3','Big (130%)'],['1.5','Large (150%)'],['1.75','Extra large (175%)'],['2','Huge (200%)']];
+function mkTitleFont(T,ts){ return T.font==='clean'?`800 ${ts}px Manrope, Arial, sans-serif`:T.font==='mono'?`700 ${ts*.9}px "JetBrains Mono", "Courier New", monospace`:T.font==='classic'?`700 ${ts}px Georgia, "Times New Roman", serif`:T.font==='impact'?`900 ${ts}px "Arial Black", Impact, Arial, sans-serif`:T.font==='fun'?`700 ${ts}px "Fredoka", "Arial Rounded MT Bold", Arial, sans-serif`:T.font==='script'?`400 ${ts*1.35}px "Great Vibes", "Brush Script MT", cursive`:T.font==='serif'?`700 ${ts}px "Playfair Display", Georgia, serif`:`800 ${ts}px "Bricolage Grotesque", "Arial Black", Arial, sans-serif`; }
 function mkScene(ctx,W,H,s,lt,gt,T){
   ctx.save();
   if(T.shake&&lt<.4){ const base=Math.min(W,H), k=(.4-lt)/.4*base*.025, f=Math.floor(lt*60); ctx.translate((mkRnd(f,341)-.5)*k*2,(mkRnd(f,342)-.5)*k*2); }
@@ -1590,6 +1592,8 @@ function mkScene(ctx,W,H,s,lt,gt,T){
 function mkScene0(ctx,W,H,s,lt,gt,T){
   const base=Math.min(W,H), a0=ctx.globalAlpha, d=+s.dur||3;
   mkBg(ctx,W,H,T,gt,MK.scenes.indexOf(s));
+  const fOv=s.font||MK.font, cOv=MK.tcolor;
+  if(fOv||cOv) T=Object.assign({},T,fOv?{font:fOv}:{},cOv?{text:cOv,gold:false,neon:false,cycleText:null}:{});
   const im=s.img?mkLook(s.img,s.look||'auto'):null, iw=im&&(im.naturalWidth||im.width), ih=im&&(im.naturalHeight||im.height), hasImg=!!(iw&&ih);
   const album=T.layout==='album', port=H>=W, fullImg=hasImg&&!album;
   const TX=album&&!port?W*.75:W/2;
@@ -1617,14 +1621,15 @@ function mkScene0(ctx,W,H,s,lt,gt,T){
     if(T.fx==='showroom'){ const p=((lt+.3)/2.2)%1, sx=-W*.5+p*W*2; ctx.save(); ctx.globalCompositeOperation='lighter'; const g2=ctx.createLinearGradient(sx-base*.25,0,sx+base*.25,0); g2.addColorStop(0,'rgba(255,255,255,0)'); g2.addColorStop(.5,'rgba(255,255,255,.28)'); g2.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g2; ctx.translate(sx,H/2); ctx.rotate(.35); ctx.translate(-sx,-H/2); ctx.fillRect(sx-base*.25,-H,base*.5,H*3); ctx.restore(); }
   }
   const title=String(s.title||''), shrink=title.length>60?.6:title.length>36?.74:title.length<=5?1.9:1;
-  const col=fullImg?'#FFFFFF':T.text, ts=base*(W>H?.1:.092)*shrink*(T.font==='fun'?1.08:1)*(title.length<=5&&T.titleScale?T.titleScale:1), ss=base*.046, maxW=album&&!port?W*.42:W*.82;
+  const col=cOv||(fullImg?'#FFFFFF':T.text), ts=base*(W>H?.1:.092)*shrink*(T.font==='fun'?1.08:1)*(title.length<=5&&T.titleScale?T.titleScale:1)*(+s.tsize||1)*(MK.tsize||1), ss=base*.046*(MK.ssize||1), maxW=album&&!port?W*.42:W*.82;
   const tf=mkTitleFont(T,ts), sf=`${T.font==='fun'?'700':'600'} ${ss}px ${T.font==='fun'?'Fredoka, ':''}Manrope, Arial, sans-serif`;
   ctx.textAlign='center'; ctx.textBaseline='alphabetic';
   ctx.font=tf; const tl=mkWrap(ctx,T.upper?title.toUpperCase():title,maxW).slice(0,5);
   ctx.font=sf; const sl=mkWrap(ctx,s.sub,maxW).slice(0,4);
   const gap=base*.03, lh=ts*(T.font==='script'?1.3:1.1), slh=ss*1.35, bh=base*.01;
   const blockH=tl.length*lh+(sl.length?gap*2+bh+sl.length*slh:0);
-  let y=album?(port?H*.6+base*.02+(H*.9-H*.6-blockH)/2:(H-blockH)/2):(fullImg||T.pos==='low')?H-base*.17-blockH:T.pos==='high'?H*.14:T.pos==='mid-low'?H*.56-blockH/2:(H-blockH)/2;
+  const pos=MK.tpos||(fullImg?'low':T.pos);
+  let y=album&&!MK.tpos?(port?H*.6+base*.02+(H*.9-H*.6-blockH)/2:(H-blockH)/2):pos==='low'?H-base*.17-blockH:pos==='high'?H*.14:pos==='mid-low'?H*.56-blockH/2:(H-blockH)/2;
   const an=s.anim||T.anim||'rise', off=base*.06; let dx1=0, dx2=0;
   let e1=mkEase((lt-.15)/.7), e2=mkEase((lt-.45)/.7), sc1=1, dy1=(1-e1)*off, al1=e1, chars=1e9;
   if(an==='pop'){ const p=mkClamp((lt-.1)/.55); sc1=Math.max(.01,mkBack(p)); al1=mkClamp(p*3); dy1=0; }
@@ -1666,7 +1671,7 @@ function mkScene0(ctx,W,H,s,lt,gt,T){
       ctx.fillStyle='#7A520F'; for(let k=dep;k>0;k--) ctx.fillText(l,x+k*.4,yy+k);
       ctx.fillStyle=mkGoldFill(ctx,yy-ts*.8,yy+ts*.15,T); ctx.fillText(l,x,yy);
       const ga=ctx.globalAlpha; ctx.globalAlpha=ga*.55; ctx.lineWidth=Math.max(1,base*.0016); ctx.strokeStyle='#FFF8DC'; ctx.strokeText(l,x,yy-base*.001); ctx.globalAlpha=ga;
-    } else { shade(fullImg||T.text==='#FFFFFF'); ctx.fillStyle=col; ctx.fillText(l,x,yy); }
+    } else { shade(fullImg||T.text==='#FFFFFF'||!!cOv); ctx.fillStyle=col; ctx.fillText(l,x,yy); }
   };
   tl.forEach((l0,j)=>{
     let l=l0; if(chars<1e9){ const take=Math.max(0,Math.min(l0.length,chars-shown)); shown+=l0.length+1; l=l0.slice(0,take); if(!l) return; }
@@ -1787,6 +1792,14 @@ VIEWS.maker=el=>{
           <p class="note" id="mkHint"></p>
           <div class="row2"><div class="field"><label for="mk-fx">Magic effect</label><select id="mk-fx">${MK_EFFECTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}</select></div>
           <div class="field"><label for="mk-trans">Transition</label><select id="mk-trans">${MK_TRANS.map(([k,n])=>`<option value="${k}" ${k===MK.trans?'selected':''}>${n}</option>`).join('')}</select></div></div>
+          <details class="mk-more" id="mkTextBox" open><summary>Text: font, size, colour and position</summary><div class="mk-morebody">
+            <div class="field"><label for="mk-font">Font</label><select id="mk-font">${MK_FONTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}</select></div>
+            <div class="field"><label for="mk-tsize">Headline size · <span id="mkTsV">100%</span></label><input type="range" id="mk-tsize" min="0.5" max="2" step="0.05" value="1"></div>
+            <div class="field"><label for="mk-ssize">Supporting line size · <span id="mkSsV">100%</span></label><input type="range" id="mk-ssize" min="0.5" max="2" step="0.05" value="1"></div>
+            <div class="row2"><div class="field"><label for="mk-tcolon">Text colour</label><select id="mk-tcolon"><option value="">Template colours</option><option value="1">My colour</option></select></div><div class="field"><label for="mk-tcol">Pick colour</label><input type="color" id="mk-tcol" value="#FFFFFF" style="height:42px;width:100%;background:none;border:1px solid var(--line);border-radius:9px"></div></div>
+            <div class="field"><label for="mk-tpos">Position</label><select id="mk-tpos"><option value="">Template position</option><option value="high">Top</option><option value="center">Middle</option><option value="low">Bottom</option></select></div>
+            <button class="btn line small" type="button" id="mkTextReset" style="align-self:flex-start">Reset text settings</button>
+          </div></details>
           <div class="field"><label for="mk-3d">Title style</label><select id="mk-3d">${MK_3D_OPTS.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}</select></div>
           <div class="field"><span class="flabel">Video length</span><div class="chips" role="group" aria-label="Video length">${[[15,'15 sec'],[30,'30 sec'],[60,'1 min'],[120,'2 min'],[180,'3 min'],[300,'5 min']].map(([v,n])=>`<label><input type="radio" name="mklen" value="${v}"><span>${n}</span></label>`).join('')}</div><span class="note">Spreads the time evenly across your scenes. You can still change each scene below.</span></div>
           <button class="btn line small" type="button" id="mkSamples" style="align-self:flex-start" hidden>Use this template's sample text</button>
@@ -1915,10 +1928,12 @@ VIEWS.maker=el=>{
           <div class="field"><label for="mk-d-${i}">Length</label><select id="mk-d-${i}" data-f="dur">${(MK_DURS.includes(+s.dur)?MK_DURS:[+s.dur].concat(MK_DURS)).map(d=>`<option value="${d}" ${d==s.dur?'selected':''}>${d} seconds</option>`).join('')}</select></div>
           <div class="field"><label for="mk-m-${i}">Photo motion</label><select id="mk-m-${i}" data-f="motion">${MK_MOTIONS.map(([k,nm])=>`<option value="${k}" ${k===s.motion?'selected':''}>${nm}</option>`).join('')}</select></div>
         </div>
-        <details class="mk-scmore" data-i="${i}" ${s._open?'open':''}><summary>More for this scene: clip art, text style, transition, photo look</summary><div class="mk-row" style="margin-top:8px">
+        <details class="mk-scmore" data-i="${i}" ${s._open?'open':''}><summary>More for this scene: font, size, clip art, text style, transition, photo look</summary><div class="mk-row" style="margin-top:8px">
           <div class="field"><label for="mk-k-${i}">Clip art</label><select id="mk-k-${i}" data-f="sticker">${MK_STICKERS.map(([k,nm])=>`<option value="${k}" ${k===(s.sticker||'none')?'selected':''}>${nm}</option>`).join('')}</select></div>
           <div class="field"><label for="mk-p-${i}">Clip art place</label><select id="mk-p-${i}" data-f="spot">${MK_SPOTS.map(([k,nm])=>`<option value="${k}" ${k===(s.spot||'tr')?'selected':''}>${nm}</option>`).join('')}</select></div>
           <div class="field"><label for="mk-a-${i}">Text style</label><select id="mk-a-${i}" data-f="anim">${MK_TEXTFX.map(([k,nm])=>`<option value="${k}" ${k===(s.anim||'')?'selected':''}>${nm}</option>`).join('')}</select></div>
+          <div class="field"><label for="mk-f-${i}">Font for this scene</label><select id="mk-f-${i}" data-f="font">${[['','Same as video']].concat(MK_FONTS.slice(1)).map(([k,nm])=>`<option value="${k}" ${k===(s.font||'')?'selected':''}>${nm}</option>`).join('')}</select></div>
+          <div class="field"><label for="mk-z-${i}">Headline size for this scene</label><select id="mk-z-${i}" data-f="tsize">${MK_SIZES.map(([k,nm])=>`<option value="${k}" ${k===String(s.tsize||'')?'selected':''}>${nm}</option>`).join('')}</select></div>
           <div class="field"><label for="mk-x-${i}">Transition into this scene</label><select id="mk-x-${i}" data-f="trans">${[['','Same as video']].concat(MK_TRANS).map(([k,nm])=>`<option value="${k}" ${k===(s.trans||'')?'selected':''}>${nm}</option>`).join('')}</select></div>
           <div class="field"><label for="mk-l-${i}">Photo look</label><select id="mk-l-${i}" data-f="look">${MK_LOOKS.map(([k,nm])=>`<option value="${k}" ${k===(s.look||'auto')?'selected':''}>${nm}</option>`).join('')}</select></div>
         </div></details>
@@ -1932,7 +1947,7 @@ VIEWS.maker=el=>{
   sceneBox.addEventListener('change',async e=>{ const i=idxOf(e), f=e.target.dataset.f; if(i<0) return; const s=MK.scenes[i];
     if(f==='dur'){ s.dur=+e.target.value; updateTotal(); dirty=true; }
     else if(f==='motion'){ s.motion=e.target.value; dirty=true; }
-    else if(['sticker','spot','anim','look','trans'].includes(f)){ s[f]=e.target.value; dirty=true; tlVer++; if(f==='trans'&&!playing&&!exporting){ seek(Math.max(0,starts()[i]+.3)); return; } if(!playing&&!exporting) seek(starts()[i]+(f==='anim'?.05:1.2)); }
+    else if(['sticker','spot','anim','look','trans','font','tsize'].includes(f)){ s[f]=e.target.value; dirty=true; tlVer++; if(f==='trans'&&!playing&&!exporting){ seek(Math.max(0,starts()[i]+.3)); return; } if(!playing&&!exporting) seek(starts()[i]+(f==='anim'?.05:1.2)); }
     else if(f==='img'){ const file=e.target.files[0]; if(!file) return; try{ const r=await mkLoadImg(file,1600); s.img=r.img; s.imgUrl=r.url; s.lib=false; s.focus=.5; renderScenes(); seek(starts()[i]+1.2); }catch(x){ toast('That photo could not be opened. Try a JPG or PNG.'); } }
   });
   sceneBox.addEventListener('focusin',e=>{ const i=idxOf(e); if(i>=0&&!playing&&!exporting) seek(starts()[i]+1.2); });
@@ -1967,6 +1982,16 @@ VIEWS.maker=el=>{
   $('#mk-credit',el).checked=MK.credit; $('#mk-credit',el).onchange=e=>{ MK.credit=e.target.checked; dirty=true; };
   if(APK) $('#mkAIBox',el).hidden=true;
   $('#mk-trans',el).onchange=e=>{ MK.trans=e.target.value; MK.transAuto=false; dirty=true; };
+  const txtSync=()=>{ $('#mk-font',el).value=MK.font; $('#mk-tsize',el).value=MK.tsize; $('#mk-ssize',el).value=MK.ssize; $('#mkTsV',el).textContent=Math.round(MK.tsize*100)+'%'; $('#mkSsV',el).textContent=Math.round(MK.ssize*100)+'%'; $('#mk-tcolon',el).value=MK.tcolor?'1':''; if(MK.tcolor) $('#mk-tcol',el).value=MK.tcolor; $('#mk-tpos',el).value=MK.tpos; };
+  const txtShow=()=>{ dirty=true; if(!playing&&!exporting){ const st=starts(), i=Math.max(0,st.findIndex((a,k)=>MK.t>=a&&(k===st.length-1||MK.t<st[k+1]))); if(MK.t-st[i]<1.5) seek(st[i]+1.6); } };
+  $('#mk-font',el).onchange=e=>{ MK.font=e.target.value; txtShow(); };
+  $('#mk-tsize',el).oninput=e=>{ MK.tsize=+e.target.value; $('#mkTsV',el).textContent=Math.round(MK.tsize*100)+'%'; txtShow(); };
+  $('#mk-ssize',el).oninput=e=>{ MK.ssize=+e.target.value; $('#mkSsV',el).textContent=Math.round(MK.ssize*100)+'%'; txtShow(); };
+  $('#mk-tcolon',el).onchange=e=>{ MK.tcolor=e.target.value?$('#mk-tcol',el).value:''; txtShow(); };
+  $('#mk-tcol',el).oninput=e=>{ $('#mk-tcolon',el).value='1'; MK.tcolor=e.target.value; txtShow(); };
+  $('#mk-tpos',el).onchange=e=>{ MK.tpos=e.target.value; txtShow(); };
+  $('#mkTextReset',el).onclick=()=>{ MK.font=''; MK.tsize=1; MK.ssize=1; MK.tcolor=''; MK.tpos=''; txtSync(); txtShow(); };
+  txtSync();
   $('#mk-3d',el).value=MK.title3d; $('#mk-3d',el).onchange=e=>{ MK.title3d=e.target.value; dirty=true; if(!playing) seek(Math.max(MK.t,1.5)); };
   $('#mk-fx',el).value=MK.effect; $('#mk-fx',el).onchange=e=>{ MK.effect=e.target.value; MK.effectAuto=false; dirty=true; };
   $$('input[name="mklen"]',el).forEach(r=>r.onchange=()=>{ const target=+r.value, n=MK.scenes.length||1, d=Math.max(1,Math.round(target/n*10)/10); MK.scenes.forEach(sc=>sc.dur=d); renderScenes(); seek(Math.min(MK.t,mkTotal())); warmMusic(); toast('Video length set to '+mkFmt(d*n)); });
@@ -2256,6 +2281,7 @@ VIEWS.help=el=>{
     ['Pick a magic effect and length','Choose an effect for the whole video, such as Christmas snow, sparkles, floating hearts or old film. Then set the video length: 15 seconds, 30 seconds, 1 minute or 2 minutes.'],
     ['Add music and your voice','Each template picks matching music, and you can change it. Tap Record voice and read the script while the video plays. The music goes quieter while you speak.'],
     ['Create, save and share','Tap Create video file and keep the screen on. A 1-minute video takes about 1 minute. Then tap Save video'+(APK&&!window.AJ_DESKTOP?' and Share to send it to TikTok, WhatsApp or Facebook.':' to keep it on your device.')],
+    ['Change fonts and text sizes','Open Text: font, size, colour and position. Pick a font, slide Headline size and Supporting line size, choose your own colour, and move the words to the top, middle or bottom. To change only one scene, open More for this scene and pick a font or size there.'],
     ['Use the pro tools','Title style gives your headlines 3D gold, fire, ice or chrome letters. Each scene can have its own transition, like 3D cube, whip pan, liquid ripple or film burn. Choose Music from my words, type a few words and tap Make my music. The timeline under the preview shows every scene: tap it to jump. Videos can be up to 5 minutes.'],
     ['Turn a photo album into a flipbook','Pick a template from Flipbook Albums, tap Add photos and choose your pictures. Each photo lands on its own page in a white frame, and the pages turn like a real book.']
   ];
